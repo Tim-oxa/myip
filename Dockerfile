@@ -2,7 +2,7 @@ FROM python:3.14-slim AS builder
 
 WORKDIR /app
 
-RUN pip install --no-cache-dir uv
+RUN wget -qO- https://astral.sh/uv/install.sh | sh
 
 COPY pyproject.toml ./
 
@@ -16,4 +16,4 @@ COPY --from=builder /usr/local /usr/local
 
 COPY . .
 
-CMD ["python", "main.py"]
+CMD ["uv", "run", "main.py"]
