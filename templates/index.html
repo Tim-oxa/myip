@@ -1,0 +1,318 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>IP Information</title>
+    <style>
+        :root {
+            color-scheme: light dark;
+            --bg: #0f172a;
+            --card: #111827;
+            --text: #e5e7eb;
+            --muted: #94a3b8;
+            --accent: #22d3ee;
+            --success: #4ade80;
+            --danger: #f87171;
+            --field-height: 26px;
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            min-height: 100vh;
+            display: grid;
+            place-items: center;
+            background: radial-gradient(120% 120% at 20% 20%, rgba(34, 211, 238, 0.12), transparent),
+                        radial-gradient(100% 100% at 80% 0%, rgba(59, 130, 246, 0.14), transparent),
+                        var(--bg);
+            color: var(--text);
+            font-family: "Inter", system-ui, -apple-system, sans-serif;
+            padding: 32px;
+        }
+
+        .card {
+            width: min(720px, 100%);
+            background: linear-gradient(145deg, rgba(255, 255, 255, 0.05), rgba(17, 24, 39, 0.65));
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 18px;
+            box-shadow: 0 20px 80px rgba(0, 0, 0, 0.4);
+            backdrop-filter: blur(8px);
+            padding: 28px 32px;
+        }
+
+        h1 {
+            margin: 0 0 16px;
+            font-size: 28px;
+            letter-spacing: -0.02em;
+        }
+
+        p.sub {
+            margin: 0 0 24px;
+            color: var(--muted);
+        }
+
+        .grid {
+            display: grid;
+            gap: 16px;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+        }
+
+        .item {
+            padding: 14px 16px;
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 12px;
+            background: rgba(255, 255, 255, 0.02);
+        }
+
+        .label {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            color: var(--muted);
+            font-size: 13px;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+        }
+
+        .value {
+            margin-top: 6px;
+            font-size: 18px;
+            font-weight: 600;
+            color: var(--text);
+            line-height: 1.4;
+            word-break: break-word;
+        }
+
+        .value.ip {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 12px;
+        }
+
+        [data-field] {
+            display: block;
+            min-height: var(--field-height);
+            line-height: 1.4;
+        }
+
+        .value.ip [data-field="ip"] {
+            flex: 1;
+        }
+
+        .copy-btn {
+            flex-shrink: 0;
+            padding: 8px 8px;
+            border-radius: 10px;
+            border: 1px solid rgba(255, 255, 255, 0.16);
+            background: rgba(34, 211, 238, 0.12);
+            color: var(--text);
+            width: 40px;
+            height: 40px;
+            display: grid;
+            place-items: center;
+            cursor: pointer;
+            transition: transform 120ms ease, border-color 120ms ease, background 120ms ease;
+        }
+
+        .copy-btn:hover {
+            border-color: rgba(34, 211, 238, 0.4);
+            background: rgba(34, 211, 238, 0.2);
+            transform: translateY(-1px);
+        }
+
+        .copy-btn:active {
+            transform: translateY(0);
+        }
+
+        .copy-btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+
+        .copy-btn[data-state="copied"] {
+            border-color: rgba(74, 222, 128, 0.5);
+            background: rgba(74, 222, 128, 0.15);
+            color: var(--success);
+        }
+
+        .copy-btn[data-state="error"] {
+            border-color: rgba(248, 113, 113, 0.5);
+            background: rgba(248, 113, 113, 0.12);
+            color: var(--danger);
+        }
+
+        .copy-btn svg {
+            width: 20px;
+            height: 20px;
+        }
+
+        .copy-btn .icon-check {
+            display: none;
+        }
+
+        .copy-btn[data-state="copied"] .icon-copy {
+            display: none;
+        }
+
+        .copy-btn[data-state="copied"] .icon-check {
+            display: inline;
+        }
+
+        [data-loading] {
+            position: relative;
+            color: transparent !important;
+            background: linear-gradient(90deg, rgba(255, 255, 255, 0.05), rgba(255, 255, 255, 0.16), rgba(255, 255, 255, 0.05));
+            background-size: 200% 100%;
+            animation: shimmer 1.3s ease-in-out infinite;
+            border-radius: 10px;
+            height: var(--field-height);
+        }
+
+        @keyframes shimmer {
+            from { background-position: 200% 0; }
+            to { background-position: -200% 0; }
+        }
+
+        @media (max-width: 640px) {
+            body {
+                min-height: 100dvh;
+                height: 100dvh;
+                padding: 16px;
+            }
+
+            .card {
+                padding: 22px 20px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <main class="card">
+        <h1>Your IP</h1>
+        <p class="sub">Data is automatically detected from your connection.</p>
+        <section class="grid">
+            <div class="item">
+                <div class="label">IP</div>
+                <div class="value ip">
+                    <span id="ip-value" data-field="ip" data-loading="true"></span>
+                    <button class="copy-btn" type="button" data-copy-ip aria-label="Copy IP" data-state="idle" disabled>
+                        <svg class="icon-copy" viewBox="0 0 16 16" aria-hidden="true" focusable="false">
+                            <path fill="currentColor" fill-rule="evenodd" d="M4 2a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2zm2-1a1 1 0 0 0-1 1v8a1 1 0 0 0 1 1h8a1 1 0 0 0 1-1V2a1 1 0 0 0-1-1zM2 5a1 1 0 0 0-1 1v8a1 1 0 0 0 1 1h8a1 1 0 0 0 1-1v-1h1v1a2 2 0 0 1-2 2H2a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h1v1z"/>
+                        </svg>
+                        <svg class="icon-check" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+                            <path fill="currentColor" d="M20.285 6.709a1 1 0 0 1 0 1.414l-9.5 9.5a1 1 0 0 1-1.414 0l-5.5-5.5A1 1 0 1 1 5.285 10.7l4.793 4.793 8.793-8.793a1 1 0 0 1 1.414 0Z"/>
+                        </svg>
+                    </button>
+                </div>
+            </div>
+            <div class="item">
+                <div class="label">Country</div>
+                <div class="value" data-field="country_code" data-loading="true"></div>
+            </div>
+            <div class="item">
+                <div class="label">City</div>
+                <div class="value" data-field="city" data-loading="true"></div>
+            </div>
+            <div class="item">
+                <div class="label">ASN</div>
+                <div class="value" data-field="autonomous_system_number" data-loading="true"></div>
+            </div>
+            <div class="item">
+                <div class="label">Organization</div>
+                <div class="value" data-field="autonomous_system_organization" data-loading="true"></div>
+            </div>
+        </section>
+    </main>
+    <script>
+        const fields = {
+            ip: document.querySelector('[data-field="ip"]'),
+            country_code: document.querySelector('[data-field="country_code"]'),
+            city: document.querySelector('[data-field="city"]'),
+            autonomous_system_number: document.querySelector('[data-field="autonomous_system_number"]'),
+            autonomous_system_organization: document.querySelector('[data-field="autonomous_system_organization"]'),
+        };
+
+        const copyBtn = document.querySelector("[data-copy-ip]");
+        const ipValue = fields.ip;
+
+        const startLoading = () => {
+            Object.values(fields).forEach((el) => {
+                if (!el) return;
+                el.dataset.loading = "true";
+                el.textContent = "";
+            });
+            if (copyBtn) {
+                copyBtn.disabled = true;
+                copyBtn.dataset.state = "idle";
+            }
+        };
+
+        const setAllFields = (text) => {
+            Object.values(fields).forEach((el) => {
+                if (!el) return;
+                el.textContent = text;
+                delete el.dataset.loading;
+            });
+        };
+
+        const setField = (key, value) => {
+            const el = fields[key];
+            if (!el) return;
+            el.textContent = value ?? "—";
+            delete el.dataset.loading;
+        };
+
+        async function loadIpInfo() {
+            startLoading();
+            try {
+                const response = await fetch("/api", { headers: { Accept: "application/json" } });
+                if (!response.ok) {
+                    throw new Error(`Request failed: ${response.status}`);
+                }
+
+                const data = await response.json();
+
+                setField("ip", data.ip);
+                setField("country_code", data.country || data.country_code);
+                setField("city", data.city);
+                setField("autonomous_system_number", data.autonomous_system_number);
+                setField("autonomous_system_organization", data.autonomous_system_organization);
+
+                if (copyBtn) {
+                    copyBtn.disabled = !data.ip;
+                    copyBtn.dataset.state = "idle";
+                }
+            } catch (error) {
+                setAllFields("Unavailable");
+                if (copyBtn) {
+                    copyBtn.dataset.state = "error";
+                    copyBtn.disabled = true;
+                }
+            }
+        }
+
+        if (copyBtn && ipValue) {
+            copyBtn.addEventListener("click", async () => {
+                const text = ipValue.textContent.trim();
+                if (!text || text === "-" || text === "Loading..." || text === "Unavailable") return;
+
+                try {
+                    await navigator.clipboard.writeText(text);
+                    copyBtn.dataset.state = "copied";
+                    setTimeout(() => copyBtn.dataset.state = "idle", 2000);
+                } catch (err) {
+                    copyBtn.dataset.state = "error";
+                    setTimeout(() => copyBtn.dataset.state = "idle", 2000);
+                }
+            });
+        }
+
+        loadIpInfo();
+    </script>
+</body>
+</html>
