@@ -6,4 +6,4 @@ RUN uv sync --no-dev
 
 COPY . .
 
-CMD ["uv", "run", "granian", "main:app", "--interface", "asgi", "--host", "0.0.0.0"]
+CMD ["uv", "run", "granian", "main:app", "--interface", "asgi", "--host", "0.0.0.0", "--access-log", "--log-level", "debug"]
