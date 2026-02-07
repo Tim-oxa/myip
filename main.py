@@ -1,6 +1,7 @@
 from litestar import Litestar, get, Request
 from litestar.response import Template
 from litestar.template import TemplateConfig
+from litestar.contrib.jinja import JinjaTemplateEngine
 from pymongo import AsyncMongoClient
 from config import *
 import ipaddress
@@ -46,5 +47,5 @@ async def api(request: Request) -> dict:
 
 app = Litestar(
     [index, api],
-    template_config=TemplateConfig(directory="templates")
+    template_config=TemplateConfig(directory="templates", engine=JinjaTemplateEngine),
 )
