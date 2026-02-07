@@ -1,24 +1,22 @@
-from quart import Quart, request, render_template, jsonify
+from litestar import Litestar, get, Request
+from litestar.response import Template
+from litestar.template import TemplateConfig
 from pymongo import AsyncMongoClient
-from hypercorn.asyncio import serve
-from hypercorn.config import Config
 from config import *
 import ipaddress
-import asyncio
 
 
 db = AsyncMongoClient(DB_URL)[DB_NAME]
 
-app = Quart(__name__)
 
 
-@app.get("/")
-async def index():
-    return await render_template("index.html")
+@get("/")
+async def index() -> Template:
+    return Template("index.html")
 
 
-@app.get("/api")
-async def api():
+@get("/api")
+async def api(request: Request) -> dict:
     ip = request.headers.get("X-Forwarded-For")
     ip_int = int(ipaddress.IPv4Address(ip))
 
@@ -36,16 +34,17 @@ async def api():
     autonomous_system_number = asn.get("autonomous_system_number")
     autonomous_system_organization = asn.get("autonomous_system_organization")
 
-    return jsonify({
+    return {
         "ip": ip,
         "country_code": country_code,
         "country": country,
         "city": city,
         "autonomous_system_number": autonomous_system_number,
         "autonomous_system_organization": autonomous_system_organization
-    })
+    }
 
 
-hc_config = Config()
-hc_config.bind = f"0.0.0.0:{PORT}"
-asyncio.run(serve(app, hc_config))
+app = Litestar(
+    [index, api],
+    template_config=TemplateConfig(directory="templates")
+)
